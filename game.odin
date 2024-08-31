@@ -27,7 +27,7 @@ game_init :: proc() {
 false when you wish to terminate the program. */
 @(export)
 game_update :: proc() -> bool {
-	g_mem.some_state += 1
+	g_mem.some_state -= 1
 	fmt.println(g_mem.some_state)
 	if g_mem.some_state >= 100000 {
 		return false

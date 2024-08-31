@@ -1,4 +1,4 @@
 @echo off
 
-odin build main.odin -file && main.exe
+build && odin build main.odin -file && main.exe
 
