@@ -1,7 +1,6 @@
 package main
 
 import "core:fmt"
-import rl "vendor:raylib"
 
 /* Our game's state lives within this struct. In
 order for hot reload to work the game's memory
@@ -27,7 +26,7 @@ game_init :: proc() {
 false when you wish to terminate the program. */
 @(export)
 game_update :: proc() -> bool {
-	g_mem.some_state -= 1
+	g_mem.some_state += 1
 	fmt.println(g_mem.some_state)
 	if g_mem.some_state >= 100000 {
 		return false
@@ -42,16 +41,6 @@ has exited. Clean up your memory here. */
 @(export)
 game_shutdown :: proc() {
 	free(g_mem)
-}
-
-@(export)
-game_reset :: proc() -> bool {
-	if rl.IsKeyPressed(.F6) {
-		fmt.println("reset")
-		return true
-	} else {
-		return false
-	}
 }
 
 /* Returns a pointer to the game memory. When
