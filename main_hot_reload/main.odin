@@ -11,6 +11,7 @@ GameAPI :: struct {
 	shutdown:     proc(),
 	memory:       proc() -> rawptr,
 	hot_reloaded: proc(_: rawptr),
+	full_reset:   proc() -> bool,
 	lib:          dynlib.Library,
 	dll_time:     os.File_Time,
 	api_version:  int,
@@ -45,6 +46,8 @@ load_game_api :: proc(api_version: int) -> (GameAPI, bool) {
 		shutdown     = cast(proc())(dynlib.symbol_address(lib, "game_shutdown") or_else nil),
 		memory       = cast(proc(
 		) -> rawptr)(dynlib.symbol_address(lib, "game_memory") or_else nil),
+		full_reset   = cast(proc(
+		) -> bool)(dynlib.symbol_address(lib, "game_force_restart") or_else nil),
 		hot_reloaded = cast(proc(
 			_: rawptr,
 		))(dynlib.symbol_address(lib, "game_hot_reloaded") or_else nil),
@@ -99,17 +102,23 @@ main :: proc() {
 
 		reload := dll_time_err == os.ERROR_NONE && game_api.dll_time != dll_time
 
+		full_reset := game_api.full_reset()
+
 		if reload {
 			new_api, new_api_ok := load_game_api(game_api_version)
 
 			if new_api_ok {
-				game_memory := game_api.memory()
-				unload_game_api(game_api)
-
-				game_api = new_api
-
-				game_api.hot_reloaded(game_memory)
-
+				if full_reset {
+					game_api.shutdown()
+					unload_game_api(game_api)
+					game_api = new_api
+					game_api.init()
+				} else {
+					game_memory := game_api.memory()
+					unload_game_api(game_api)
+					game_api = new_api
+					game_api.hot_reloaded(game_memory)
+				}
 				game_api_version += 1
 			}
 		}
