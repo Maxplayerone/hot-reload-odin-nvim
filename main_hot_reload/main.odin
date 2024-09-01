@@ -6,15 +6,17 @@ import "core:fmt"
 import "core:os"
 
 GameAPI :: struct {
-	init:         proc(),
-	update:       proc() -> bool,
-	shutdown:     proc(),
-	memory:       proc() -> rawptr,
-	hot_reloaded: proc(_: rawptr),
-	full_reset:   proc() -> bool,
-	lib:          dynlib.Library,
-	dll_time:     os.File_Time,
-	api_version:  int,
+	init:            proc(),
+	init_window:     proc(),
+	update:          proc() -> bool,
+	shutdown:        proc(),
+	shutdown_window: proc(),
+	memory:          proc() -> rawptr,
+	hot_reloaded:    proc(_: rawptr),
+	full_reset:      proc() -> bool,
+	lib:             dynlib.Library,
+	dll_time:        os.File_Time,
+	api_version:     int,
 }
 
 load_game_api :: proc(api_version: int) -> (GameAPI, bool) {
@@ -41,19 +43,23 @@ load_game_api :: proc(api_version: int) -> (GameAPI, bool) {
 	}
 
 	api := GameAPI {
-		init         = cast(proc())(dynlib.symbol_address(lib, "game_init") or_else nil),
-		update       = cast(proc() -> bool)(dynlib.symbol_address(lib, "game_update") or_else nil),
-		shutdown     = cast(proc())(dynlib.symbol_address(lib, "game_shutdown") or_else nil),
-		memory       = cast(proc(
+		init            = cast(proc())(dynlib.symbol_address(lib, "game_init") or_else nil),
+		init_window     = cast(proc())(dynlib.symbol_address(lib, "game_init_window") or_else nil),
+		shutdown_window = cast(proc(
+		))(dynlib.symbol_address(lib, "game_shutdown_window") or_else nil),
+		update          = cast(proc(
+		) -> bool)(dynlib.symbol_address(lib, "game_update") or_else nil),
+		shutdown        = cast(proc())(dynlib.symbol_address(lib, "game_shutdown") or_else nil),
+		memory          = cast(proc(
 		) -> rawptr)(dynlib.symbol_address(lib, "game_memory") or_else nil),
-		full_reset   = cast(proc(
+		full_reset      = cast(proc(
 		) -> bool)(dynlib.symbol_address(lib, "game_force_restart") or_else nil),
-		hot_reloaded = cast(proc(
+		hot_reloaded    = cast(proc(
 			_: rawptr,
 		))(dynlib.symbol_address(lib, "game_hot_reloaded") or_else nil),
-		lib          = lib,
-		dll_time     = dll_time,
-		api_version  = api_version,
+		lib             = lib,
+		dll_time        = dll_time,
+		api_version     = api_version,
 	}
 
 	if api.init == nil ||
@@ -91,6 +97,7 @@ main :: proc() {
 
 	game_api_version += 1
 
+	game_api.init_window()
 	game_api.init()
 
 	for {
@@ -126,5 +133,6 @@ main :: proc() {
 
 	fmt.println("Shuting down the program")
 	game_api.shutdown()
+	game_api.shutdown_window()
 	unload_game_api(game_api)
 }

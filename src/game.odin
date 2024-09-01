@@ -1,12 +1,19 @@
 package main
 
 import "core:fmt"
+import rl "vendor:raylib"
 
 GameMemory :: struct {
 	some_state: int,
 }
 
 g_mem: ^GameMemory
+
+@(export)
+game_init_window :: proc() {
+	rl.InitWindow(1280, 720, "raylib hot reloading")
+	rl.SetTargetFPS(60)
+}
 
 @(export)
 game_init :: proc() {
@@ -17,12 +24,20 @@ game_init :: proc() {
 game_update :: proc() -> bool {
 	g_mem.some_state += 1
 	fmt.println(g_mem.some_state)
-	return true
+	rl.BeginDrawing()
+	rl.ClearBackground(rl.WHITE)
+	rl.EndDrawing()
+	return !rl.WindowShouldClose()
 }
 
 @(export)
 game_shutdown :: proc() {
 	free(g_mem)
+}
+
+@(export)
+game_shutdown_window :: proc() {
+	rl.CloseWindow()
 }
 
 @(export)
