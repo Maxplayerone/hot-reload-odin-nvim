@@ -1,79 +1,36 @@
-package main
+package game
 
-import "core:fmt"
 import rl "vendor:raylib"
 
-_ :: fmt
+Game_Memory :: struct {}
 
-Player :: struct {
-	pos:    rl.Vector2,
-	radius: f32,
-	color:  rl.Color,
-}
+g_mem: ^Game_Memory
 
-get_triangle_from_pos_and_radius :: proc(
-	pos: rl.Vector2,
-	radius: f32,
-) -> (
-	rl.Vector2,
-	rl.Vector2,
-	rl.Vector2,
-) {
-
-	top_vertex := rl.Vector2{pos.x, pos.y + radius}
-	left_vertex := rl.Vector2{pos.x - 0.87 * radius, pos.y - 0.5 * radius}
-	right_vertex := rl.Vector2{pos.x + 0.87 * radius, pos.y - 0.5 * radius}
-
-	return top_vertex, left_vertex, right_vertex
-}
-
-GameMemory :: struct {
-	player: Player,
-	Width:  i32,
-	Height: i32,
-}
-
-g_mem: ^GameMemory
+Width :: 1280
+Height :: 720
 
 @(export)
 game_init_window :: proc() {
-	Width: i32 = 1280
-	Height: i32 = 720
-	rl.InitWindow(Width, Height, "raylib hot reloading")
-	rl.SetTargetFPS(60)
-
-	//g_mem.Width = Width
-	//g_mem.Height = Height
-
-	/*
-	g_mem.player = Player {
-		pos    = {f32(Width / 2), f32(Height / 2)},
-		radius = 20,
-	}
-	*/
+	rl.InitWindow(Width, Height, "Odin + Raylib + Hot Reload template!")
+	rl.SetWindowPosition(200, 200)
+	rl.SetTargetFPS(500)
 }
 
 @(export)
 game_init :: proc() {
-	g_mem = new(GameMemory)
+	g_mem = new(Game_Memory)
+
+	g_mem^ = Game_Memory{}
+
+	game_hot_reloaded(g_mem)
 }
 
 @(export)
 game_update :: proc() -> bool {
-	//updating
-
-	//drawing
 	rl.BeginDrawing()
-	rl.ClearBackground(rl.BLACK)
-
-	rl.DrawTriangle(
-		get_triangle_from_pos_and_radius(g_mem.player.pos, g_mem.player.radius),
-		g_mem.player.color,
-	)
-
+	rl.ClearBackground(rl.WHITE)
+	rl.DrawRectangleRec(rl.Rectangle{Width / 2 - 50, Height / 2 - 50, 100, 100}, rl.BLACK)
 	rl.EndDrawing()
-
-
 	return !rl.WindowShouldClose()
 }
 
@@ -93,11 +50,21 @@ game_memory :: proc() -> rawptr {
 }
 
 @(export)
-game_hot_reloaded :: proc(mem: ^GameMemory) {
-	g_mem = mem
+game_memory_size :: proc() -> int {
+	return size_of(Game_Memory)
+}
+
+@(export)
+game_hot_reloaded :: proc(mem: rawptr) {
+	g_mem = (^Game_Memory)(mem)
+}
+
+@(export)
+game_force_reload :: proc() -> bool {
+	return rl.IsKeyPressed(.Z)
 }
 
 @(export)
 game_force_restart :: proc() -> bool {
-	return false
+	return rl.IsKeyPressed(.Q)
 }
