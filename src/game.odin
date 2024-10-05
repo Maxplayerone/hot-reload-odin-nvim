@@ -2,16 +2,18 @@ package game
 
 import rl "vendor:raylib"
 
-Game_Memory :: struct {}
-
-g_mem: ^Game_Memory
+Game_Memory :: struct {
+	rect: rl.Rectangle,
+}
 
 Width :: 1280
 Height :: 720
 
+g_mem: ^Game_Memory
+
 @(export)
 game_init_window :: proc() {
-	rl.InitWindow(Width, Height, "Odin + Raylib + Hot Reload template!")
+	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
 	rl.SetWindowPosition(200, 200)
 	rl.SetTargetFPS(500)
 }
@@ -20,16 +22,20 @@ game_init_window :: proc() {
 game_init :: proc() {
 	g_mem = new(Game_Memory)
 
-	g_mem^ = Game_Memory{}
+	g_mem^ = Game_Memory {
+		rect = rl.Rectangle{Width / 2 - 20, Height / 2 - 20, 40, 40},
+	}
 
 	game_hot_reloaded(g_mem)
 }
 
 @(export)
 game_update :: proc() -> bool {
+	g_mem.rect.y += 50 * rl.GetFrameTime()
+
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.WHITE)
-	rl.DrawRectangleRec(rl.Rectangle{Width / 2 - 50, Height / 2 - 50, 100, 100}, rl.BLACK)
+	rl.DrawRectangleRec(g_mem.rect, rl.BLACK)
 	rl.EndDrawing()
 	return !rl.WindowShouldClose()
 }
